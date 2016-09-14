@@ -1,1 +1,7 @@
 # kappoobot
+
+## Installation:
+```
+npm install
+```
+
