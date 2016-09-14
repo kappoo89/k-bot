@@ -1,4 +1,4 @@
-# kappoobot
+# k-Bot
 
 ## Installation:
 ```
