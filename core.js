@@ -1,31 +1,37 @@
 'use strict';
+//Requires
 var PokemonGO = require('pokemon-go-node-api');
 var EventEmitter = require('events');
 var _ = require('lodash');
+var util = require('util');
+//
+var pokeio = new PokemonGO.Pokeio();
+var Kbot = function() {};
+util.inherits(Kbot, EventEmitter);
 /////// /////// ///////
-var a = new PokemonGO.Pokeio();
-var botEmitter = new EventEmitter();
-/////// /////// ///////
-botEmitter.on('init', function(username, password, location, provider) {
-    a.init(username, password, location, provider, function(err) {
+Kbot.prototype.init = function(username, password, location, provider) {
+    var self = this;
+    pokeio.init(username, password, location, provider, function(err) {
         try {
-            botEmitter.emit('init:complete', a.playerInfo);
+            self.emit('init:complete', pokeio.playerInfo);
         } catch (err) {
-            botEmitter.emit('ERROR', 'init', err);
+            self.emit('ERROR', 'init', err);
         }
     });
-});
-botEmitter.on('GetProfile', function() {
-    a.GetProfile(function(err, profile) {
+};
+Kbot.prototype.getProfile = function() {
+    var self = this;
+    pokeio.GetProfile(function(err, profile) {
         try {
-            botEmitter.emit('GetProfile:complete', profile);
+            self.emit('getProfile:complete', profile);
         } catch (err) {
-            botEmitter.emit('ERROR', 'GetProfile', err);
+            self.emit('ERROR', 'getProfile', err);
         }
     });
-});
-botEmitter.on('Heartbeat', function() {
-    a.Heartbeat(function(err, hb) {
+};
+Kbot.prototype.heartbeat = function() {
+    var self = this;
+    pokeio.Heartbeat(function(err, hb) {
         try {
             if (hb && hb.cells && hb.cells.length > 0) {
                 var noFort = true;
@@ -40,21 +46,22 @@ botEmitter.on('Heartbeat', function() {
                         });
                     }
                 });
-                botEmitter.emit('Heartbeat:complete', fortsAvailable);
+                self.emit('heartbeat:complete', fortsAvailable);
                 if (noFort) {
-                    botEmitter.emit('Heartbeat:warning', 'no forts');
+                    self.emit('heartbeat:warning', 'no forts');
                 }
             } else {
-                botEmitter.emit('Heartbeat:warning', 'no cells');
+                self.emit('heartbeat:warning', 'no cells');
             }
         } catch (err) {
-            botEmitter.emit('ERROR', 'Heartbeat', err);
+            self.emit('ERROR', 'heartbeat', err);
         }
     });
-});
-botEmitter.on('GetFortDetails', function(fort, FortId) {
+};
+Kbot.prototype.getFortDetails = function(fort, FortId) {
+    var self = this;
     var last = false;
-    a.GetFortDetails(fort.FortId, fort.Latitude, fort.Longitude, function(err, fortDetails) {
+    pokeio.GetFortDetails(fort.FortId, fort.Latitude, fort.Longitude, function(err, fortDetails) {
         try {
             if (fortDetails) {
                 var obj = {
@@ -66,43 +73,30 @@ botEmitter.on('GetFortDetails', function(fort, FortId) {
                 if (fort.FortId === FortId) {
                     last = true;
                 }
-                botEmitter.emit('GetFortDetails:complete', obj, last);
+                self.emit('getFortDetails:complete', obj, last);
             } else {
                 console.log('something wrong', fortDetails);
             }
         } catch (err) {
-            botEmitter.emit('ERROR', 'GetFortDetails', err);
+            self.emit('ERROR', 'getFortDetails', err);
         }
     });
-});
-botEmitter.on('GetInventory', function() {
-    a.GetInventory(function(err, inventory) {
-        try {
-            var myBag = [];
-            inventory.inventory_delta.inventory_items.forEach(function(value, key) {
-                if (value.inventory_item_data.item) {
-                    myBag.push(value.inventory_item_data.item);
-                }
-            });
-            botEmitter.emit('GetInventory:complete', myBag);
-        } catch (err) {
-            botEmitter.emit('ERROR', 'GetInventory', err);
-        }
-    });
-});
-botEmitter.on('GetFort', function(fort) {
-    a.GetFort(fort.fortId, fort.latitude, fort.longitude, function(err, fortResponse) {
+};
+Kbot.prototype.getFort = function(fort) {
+    var self = this;
+    pokeio.GetFort(fort.fortId, fort.latitude, fort.longitude, function(err, fortResponse) {
         try {
             if (fortResponse) {
-                botEmitter.emit('GetFort:complete', fortResponse);
+                self.emit('getFort:complete', fortResponse);
             }
         } catch (err) {
-            botEmitter.emit('ERROR', 'GetInventory', err);
+            self.emit('ERROR', 'getInventory', err);
         }
     });
-});
-botEmitter.on('itemInterpreter', function(item) {
-    var itemInterpretated = _.find(a.itemlist, function(itemFromList) {
+};
+Kbot.prototype.itemInterpreter = function(item) {
+    var self = this;
+    var itemInterpretated = _.find(pokeio.itemlist, function(itemFromList) {
         return itemFromList.id === item.item_id;
     });
     if (itemInterpretated) {
@@ -110,6 +104,21 @@ botEmitter.on('itemInterpreter', function(item) {
     } else {
         item.name = item.id;
     }
-    botEmitter.emit('itemInterpreter:complete', item);
-});
-module.exports = botEmitter;;
+    self.emit('itemInterpreter:complete', item);
+};
+// botEmitter.on('GetInventory', function() {
+//     a.GetInventory(function(err, inventory) {
+//         try {
+//             var myBag = [];
+//             inventory.inventory_delta.inventory_items.forEach(function(value, key) {
+//                 if (value.inventory_item_data.item) {
+//                     myBag.push(value.inventory_item_data.item);
+//                 }
+//             });
+//             botEmitter.emit('GetInventory:complete', myBag);
+//         } catch (err) {
+//             botEmitter.emit('ERROR', 'GetInventory', err);
+//         }
+//     });
+// });
+module.exports = Kbot;
