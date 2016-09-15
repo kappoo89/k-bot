@@ -25,79 +25,6 @@ var table = new Table({
 var rl;
 var coords;
 /////// /////// ///////
-function asciiArt() {
-    //http://patorjk.com/software/taag/#p=display&h=0&v=0&f=Nancyj&t=k-Bot
-    console.log('\n');
-    console.log('dP                 888888ba             dP   ');
-    console.log('88                 88    \`8b            88   ');
-    console.log('88  .dP           a88aaaa8P\' .d8888b. d8888P ');
-    console.log('88888\"   88888888  88   \`8b. 88\'  \`88   88 ');
-    console.log('88  \`8b.           88    .88 88.  .88   88   ');
-    console.log('dP   \`YP           88888888P \`88888P\'   dP   \n\n');
-};
-//asciiArt();
-function initPrompt() {
-    var history;
-    if (rl) {
-        history = rl.history;
-        rl.close();
-    }
-    rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout
-    });
-    if (history) {
-        rl.history = history;
-    };
-    rl.setPrompt('kappoo-bot> ');
-    rl.on('line', (line) => {
-        switch (true) {
-            case line.startsWith('quit'):
-            case line.startsWith('exit'):
-                rl.close();
-                process.exit(0);
-                break;
-            case line.startsWith('ls'):
-            case line.startsWith('list'):
-                console.log(table.toString());
-                rl.prompt();
-                break;
-            case line.startsWith('get'):
-                getFort();
-                break;
-            case line.startsWith('logout'):
-                logout();
-                break;
-            case line.startsWith('help'):
-                console.log('Available commands:');
-                console.log('\tquit/exit' + ' '.repeat(31) + 'Exit from bot.');
-                console.log('\tlist' + ' '.repeat(36) + 'List available Pokestop.');
-                console.log('\tget-fort' + ' '.repeat(32) + 'Get Pokestop items.');
-                console.log('\thelp' + ' '.repeat(36) + 'List available commands.');
-                rl.prompt();
-                break;
-            default:
-                rl.prompt();
-        }
-    });
-    rl.on('SIGCONT', () => {
-        console.log('Caught SIGCONT.');
-        rl.prompt();
-    });
-    rl.on('SIGTSTP', () => {
-        console.log('Caught SIGTSTP.');
-        rl.prompt();
-    });
-    rl.on('SIGINT', () => {
-        rl.question('Are you sure you want to exit? ', (answer) => {
-            if (answer.match(/^y(es)?$/i)) {
-                rl.close();
-                process.exit(0);
-            }
-        });
-    });
-    rl.prompt();
-}
 kbot.on('ERROR', function(who, err) {
     console.log(clc.red.bold('ERROR [' + who + ']'));
     console.log(clc.red(err));
@@ -185,6 +112,80 @@ kbot.on('getFort:complete', function(fortResponse) {
 kbot.on('itemInterpreter:complete', function(item) {
     console.log('(' + item.item_id + ')' + item.name + ' x' + item.item_count);
 });
+/////// /////// ///////
+function asciiArt() {
+    //http://patorjk.com/software/taag/#p=display&h=0&v=0&f=Nancyj&t=k-Bot
+    console.log('\n');
+    console.log('dP                 888888ba             dP   ');
+    console.log('88                 88    \`8b            88   ');
+    console.log('88  .dP           a88aaaa8P\' .d8888b. d8888P ');
+    console.log('88888\"   88888888  88   \`8b. 88\'  \`88   88 ');
+    console.log('88  \`8b.           88    .88 88.  .88   88   ');
+    console.log('dP   \`YP           88888888P \`88888P\'   dP   \n\n');
+};
+//asciiArt();
+function initPrompt() {
+    var history;
+    if (rl) {
+        history = rl.history;
+        rl.close();
+    }
+    rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+    if (history) {
+        rl.history = history;
+    };
+    rl.setPrompt('kappoo-bot> ');
+    rl.on('line', (line) => {
+        switch (true) {
+            case line.startsWith('quit'):
+            case line.startsWith('exit'):
+                rl.close();
+                process.exit(0);
+                break;
+            case line.startsWith('ls'):
+            case line.startsWith('list'):
+                console.log(table.toString());
+                rl.prompt();
+                break;
+            case line.startsWith('get'):
+                getFort();
+                break;
+            case line.startsWith('logout'):
+                logout();
+                break;
+            case line.startsWith('help'):
+                console.log('Available commands:');
+                console.log('\tquit/exit' + ' '.repeat(31) + 'Exit from bot.');
+                console.log('\tlist' + ' '.repeat(36) + 'List available Pokestop.');
+                console.log('\tget' + ' '.repeat(37) + 'Get Pokestop items.');
+                console.log('\thelp' + ' '.repeat(36) + 'List available commands.');
+                rl.prompt();
+                break;
+            default:
+                rl.prompt();
+        }
+    });
+    rl.on('SIGCONT', () => {
+        console.log('Caught SIGCONT.');
+        rl.prompt();
+    });
+    rl.on('SIGTSTP', () => {
+        console.log('Caught SIGTSTP.');
+        rl.prompt();
+    });
+    rl.on('SIGINT', () => {
+        rl.question('Are you sure you want to exit? ', (answer) => {
+            if (answer.match(/^y(es)?$/i)) {
+                rl.close();
+                process.exit(0);
+            }
+        });
+    });
+    rl.prompt();
+}
 
 function getFort() {
     var choices = [];
