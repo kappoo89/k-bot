@@ -1,7 +1,7 @@
 'use strict';
 //latitude: 45.668770,
 //longitude: 9.211322
-var botEmitter = require('./core.js');
+//Requires
 var store = require('json-fs-store')('./storage');
 var Table = require('cli-table');
 var loader = require('cli-loader')();
@@ -10,6 +10,9 @@ var _ = require('lodash');
 var clc = require('cli-color');
 var readline = require('readline');
 var geolib = require('geolib');
+/////// /////// ///////
+var Kbot = require('./core.js');
+var kbot = new Kbot();
 /////// /////// ///////
 var notice = clc.blue;
 var warning = clc.yellow;
@@ -95,28 +98,28 @@ function initPrompt() {
     });
     rl.prompt();
 }
-botEmitter.on('ERROR', function(who, err) {
+kbot.on('ERROR', function(who, err) {
     console.log(clc.red.bold('ERROR [' + who + ']'));
     console.log(clc.red(err));
 });
-botEmitter.on('init:complete', function(playerInfo) {
+kbot.on('init:complete', function(playerInfo) {
     console.log(notice('Current location: ' + playerInfo.locationName));
     coords = {
         lat: playerInfo.latitude,
         lon: playerInfo.longitude
     }
     console.log(notice('Current coords: : ' + playerInfo.latitude + ', ' + playerInfo.longitude));
-    botEmitter.emit('GetProfile');
+    kbot.getProfile();
 });
-botEmitter.on('GetProfile:complete', function(profile) {
+kbot.on('getProfile:complete', function(profile) {
     console.log(notice('Username: ' + profile.username));
-    botEmitter.emit('Heartbeat');
+    kbot.heartbeat();
 });
-botEmitter.on('Heartbeat:warning', function(reason) {
+kbot.on('heartbeat:warning', function(reason) {
     console.log(warning('WARINIG: ' + reason + '. Retrying...'));
-    botEmitter.emit('Heartbeat');
+    kbot.heartbeat();
 });
-botEmitter.on('Heartbeat:complete', function(fortsAvailable) {
+kbot.on('heartbeat:complete', function(fortsAvailable) {
     console.log(notice('Heartbeat complete. Looking for available Pokestops...'));
     var rnd1 = 0;
     var rnd2 = 0;
@@ -139,11 +142,11 @@ botEmitter.on('Heartbeat:complete', function(fortsAvailable) {
         rndTot = rndTot + (rnd1 * rnd2) + rnd3;
         setTimeout(function() {
             console.log('(' + (key + 1) + '/' + fortsAvailable.length + ') ');
-            botEmitter.emit('GetFortDetails', fort, _.last(fortsAvailable).FortId);
+            kbot.getFortDetails(fort, _.last(fortsAvailable).FortId);
         }, rndTot);
     });
 });
-botEmitter.on('GetFortDetails:complete', function(fort, last) {
+kbot.on('getFortDetails:complete', function(fort, last) {
     var distance = geolib.getDistance({
         latitude: coords.lat,
         longitude: coords.lon
@@ -160,13 +163,13 @@ botEmitter.on('GetFortDetails:complete', function(fort, last) {
         initPrompt();
     }
 });
-botEmitter.on('GetFort:complete', function(fortResponse) {
+kbot.on('getFort:complete', function(fortResponse) {
     loader.stop();
     // console.log('fortResponse:\n', JSON.stringify(fortResponse, null, '  '));
     if (fortResponse.result === 1) {
         console.log('Items awarded:');
         fortResponse.items_awarded.forEach(function(item) {
-            botEmitter.emit('itemInterpreter', item);
+            kbot.itemInterpreter(item);
         });
     } else if (fortResponse.result === 2) {
         console.log('Pokestop too far!');
@@ -179,7 +182,7 @@ botEmitter.on('GetFort:complete', function(fortResponse) {
     }
     initPrompt();
 });
-botEmitter.on('itemInterpreter:complete', function(item) {
+kbot.on('itemInterpreter:complete', function(item) {
     console.log('(' + item.item_id + ')' + item.name + ' x' + item.item_count);
 });
 
@@ -201,7 +204,7 @@ function getFort() {
     }];
     inquirer.prompt(questions).then(function(answers) {
         loader.start();
-        botEmitter.emit('GetFort', answers.fort);
+        kbot.getFort(answers.fort);
     });
 };
 
@@ -210,7 +213,7 @@ function logout() {
         try {
             load();
         } catch (err) {
-            botEmitter.emit('ERROR', 'save', err);
+            kbot.emit('ERROR', 'save', err);
         }
     });
 }
@@ -228,7 +231,7 @@ function save(username, password, location, provider) {
         try {
             load();
         } catch (err) {
-            botEmitter.emit('ERROR', 'save', err);
+            kbot.emit('ERROR', 'save', err);
         }
     });
 }
@@ -284,17 +287,17 @@ function load() {
                 });
             } else {
                 var loadedData = data.data;
-                botEmitter.emit('init', loadedData.username, loadedData.password, loadedData.location, loadedData.provider);
+                kbot.init(loadedData.username, loadedData.password, loadedData.location, loadedData.provider);
             }
         } catch (err) {
-            botEmitter.emit('ERROR', 'load', err);
+            kbot.emit('ERROR', 'load', err);
         }
     });
 }
 load();
 /////// /////// ///////
 //
-// botEmitter.on('GetInventory:complete', function(myBag) {
+// kbot.on('GetInventory:complete', function(myBag) {
 //     console.log('myBag', myBag);
 // });
 //
